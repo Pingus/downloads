@@ -1,0 +1,137 @@
+? diagram
+? diagram.eps
+? update2pingus-0.3.1pre3.sh
+? bugs
+? desc
+? INSTALL.txt
+? README.fot
+? README.dvi
+? README.txt
+? README.dsl
+? INSTALL.fot
+? INSTALL.sgml.refs
+? db2texi.refs
+? INSTALL.texi.refs
+? INSTALL.texi
+? INSTALL.info
+? INSTALL.man
+? INSTALL.dvi
+? data/data/story.dat
+? data/images/banner
+? data/images/images_list
+? data/images/extract_images.sh
+? data/images/exits/sortie02.GIF
+? data/images/groundpieces/gmon.out
+? data/images/textures/.axvpixs
+? data/music/CLp79.Apr08-161008B
+? doc/config
+? doc/pingus.log
+? doc/counter.txt
+? doc/pingus.sgml
+? doc/levels_xml
+? doc/colmap
+? doc/pingus.aux
+? doc/pingus.toc
+? doc/pingus.cp
+? doc/pingus.fn
+? doc/pingus.vr
+? doc/pingus.tp
+? doc/pingus.ky
+? doc/pingus.pg
+? doc/pingus.ps
+? doc/pingus2.ps
+? doc/line_breaking
+? doc/action_manager
+? src/gmon.out
+? src/PingusSoundProvider.cc
+? src/PingusSoundProvider.hh
+? src/Makefile.static
+? src/pingus.gz
+Index: data/levels/tutorial3.plf
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/data/levels/tutorial3.plf,v
+retrieving revision 1.3
+diff -u -r1.3 tutorial3.plf
+--- data/levels/tutorial3.plf	2000/05/28 19:45:41	1.3
++++ data/levels/tutorial3.plf	2000/06/08 06:57:50
+@@ -1,5 +1,5 @@
+ /* This level was created with the PLE
+- * $Id: tutorial3.plf,v 1.3 2000/05/28 19:45:41 grumbel Exp $
++ * $Id: ObjectManager.cc,v 1.11 2000/05/24 15:45:02 grumbel Exp $
+  */
+ global {
+   start_x_pos = 0;
+@@ -26,6 +26,10 @@
+   blue  = "0";
+   scroll_x = 0;
+   scroll_y = 0;
++  para_x = 0.5;
++  para_y = 0.5;
++  stretch_x = 0;
++  stretch_y = 0;
+ }
+ 
+ buttons {
+@@ -42,8 +46,8 @@
+ 
+ exit {
+   image = (resource)"Exits/desert";
+-  x_pos = 1035;
+-  y_pos = 608;
++  x_pos = 1053;
++  y_pos = 611;
+   z_pos = 0;
+ }
+ 
+@@ -62,6 +66,7 @@
+   y_pos = 213;
+   z_pos = 500;
+   speed = -1;
++  para = "1";
+ }
+ 
+ hotspot {
+@@ -70,6 +75,7 @@
+   y_pos = 434;
+   z_pos = 100;
+   speed = -1;
++  para = "1";
+ }
+ 
+ /* EOF */
+Index: data/levels/tutorial3.psm
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/data/levels/tutorial3.psm,v
+retrieving revision 1.1
+diff -u -r1.1 tutorial3.psm
+--- data/levels/tutorial3.psm	2000/03/12 02:09:31	1.1
++++ data/levels/tutorial3.psm	2000/06/08 06:57:50
+@@ -19,9 +19,10 @@
+ ground : (resource:global.dat)Hotspots/colum_pice1 : 954 : 691;
+ ground : (resource:global.dat)Hotspots/colum_pice1 : 703 : 538;
+ ground : (resource:global.dat)Hotspots/colum_pice3 : 1073 : 707;
+-ground : (resource:global.dat)Hotspots/colum_pice3 : 983 : 707;
++ground : (resource:global.dat)Hotspots/colum_pice3 : 983 : 766;
+ ground : (resource:global.dat)Hotspots/colum_pice3 : 683 : 447;
+ ground : (resource:global.dat)Hotspots/colum_pice3 : 1014 : 708;
+-ground : (resource:global.dat)Hotspots/colum_pice3 : 1041 : 708;
+-ground : (resource:global.dat)Hotspots/colum_pice3 : 928 : 741;
++ground : (resource:global.dat)Hotspots/colum_pice3 : 1041 : 706;
++ground : (resource:global.dat)Hotspots/colum_pice3 : 933 : 746;
++ground : (resource:global.dat)Hotspots/colum_pice3 : 929 : 605;
+ ground : (resource:global.dat)Hotspots/colum_pice3 : 1128 : 698;
+Index: src/TrueServer.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/TrueServer.cc,v
+retrieving revision 1.10
+diff -u -r1.10 TrueServer.cc
+--- src/TrueServer.cc	2000/06/06 18:51:51	1.10
++++ src/TrueServer.cc	2000/06/08 06:58:42
+@@ -86,6 +86,7 @@
+   // FIXME: this is complete trash, delete it and place it in world
+   // object or so...
+   world->set_action_holder(&action_holder);
++  Exit::set_action_holder(&action_holder);
+   Entrance::set_action_holder(&action_holder);
+   Pingu::set_action_holder(&action_holder);
+   Trap::set_action_holder(&action_holder);

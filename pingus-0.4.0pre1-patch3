@@ -1,0 +1,1849 @@
+? diagram
+? diagram.eps
+? update2pingus-0.3.1pre3.sh
+? bugs
+? desc
+? INSTALL.txt
+? README.fot
+? README.dvi
+? README.txt
+? README.dsl
+? INSTALL.fot
+? INSTALL.sgml.refs
+? db2texi.refs
+? INSTALL.texi.refs
+? INSTALL.texi
+? INSTALL.info
+? INSTALL.man
+? INSTALL.dvi
+? data/data/story.dat
+? data/images/banner
+? data/images/images_list
+? data/images/extract_images.sh
+? data/images/exits/sortie02.GIF
+? data/images/groundpieces/gmon.out
+? data/images/textures/.axvpixs
+? data/music/CLp79.Apr08-161008B
+? doc/config
+? doc/pingus.log
+? doc/counter.txt
+? doc/pingus.sgml
+? doc/levels_xml
+? doc/colmap
+? doc/pingus.aux
+? doc/pingus.toc
+? doc/pingus.cp
+? doc/pingus.fn
+? doc/pingus.vr
+? doc/pingus.tp
+? doc/pingus.ky
+? doc/pingus.pg
+? doc/pingus.ps
+? doc/pingus2.ps
+? doc/line_breaking
+? doc/action_manager
+? src/gmon.out
+? src/PingusSoundProvider.cc
+? src/PingusSoundProvider.hh
+? src/Makefile.static
+? src/pingus.gz
+? src/QueueServer.hh
+? src/QueueServer.cc
+Index: TODO
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/TODO,v
+retrieving revision 1.22
+diff -u -r1.22 TODO
+--- TODO	2000/06/08 06:14:18	1.22
++++ TODO	2000/06/10 07:58:38
+@@ -1,5 +1,6 @@
+ Release Critical:
+ ~~~~~~~~~~~~~~~~~
++ o climber capturing doesn't work
+  o check for ./configure --disable-sound
+  o bottom tile isn't draw (foliage1.plf)
+  o many segfaults when quitting the game
+Index: data/levels/tutorial3.plf
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/data/levels/tutorial3.plf,v
+retrieving revision 1.3
+diff -u -r1.3 tutorial3.plf
+--- data/levels/tutorial3.plf	2000/05/28 19:45:41	1.3
++++ data/levels/tutorial3.plf	2000/06/10 07:58:41
+@@ -1,5 +1,5 @@
+ /* This level was created with the PLE
+- * $Id: tutorial3.plf,v 1.3 2000/05/28 19:45:41 grumbel Exp $
++ * $Id: ObjectManager.cc,v 1.11 2000/05/24 15:45:02 grumbel Exp $
+  */
+ global {
+   start_x_pos = 0;
+@@ -26,6 +26,10 @@
+   blue  = "0";
+   scroll_x = 0;
+   scroll_y = 0;
++  para_x = 0.5;
++  para_y = 0.5;
++  stretch_x = 0;
++  stretch_y = 0;
+ }
+ 
+ buttons {
+@@ -42,8 +46,8 @@
+ 
+ exit {
+   image = (resource)"Exits/desert";
+-  x_pos = 1035;
+-  y_pos = 608;
++  x_pos = 1053;
++  y_pos = 611;
+   z_pos = 0;
+ }
+ 
+@@ -62,6 +66,7 @@
+   y_pos = 213;
+   z_pos = 500;
+   speed = -1;
++  para = "1";
+ }
+ 
+ hotspot {
+@@ -70,6 +75,7 @@
+   y_pos = 434;
+   z_pos = 100;
+   speed = -1;
++  para = "1";
+ }
+ 
+ /* EOF */
+Index: data/levels/tutorial3.psm
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/data/levels/tutorial3.psm,v
+retrieving revision 1.1
+diff -u -r1.1 tutorial3.psm
+--- data/levels/tutorial3.psm	2000/03/12 02:09:31	1.1
++++ data/levels/tutorial3.psm	2000/06/10 07:58:41
+@@ -19,9 +19,10 @@
+ ground : (resource:global.dat)Hotspots/colum_pice1 : 954 : 691;
+ ground : (resource:global.dat)Hotspots/colum_pice1 : 703 : 538;
+ ground : (resource:global.dat)Hotspots/colum_pice3 : 1073 : 707;
+-ground : (resource:global.dat)Hotspots/colum_pice3 : 983 : 707;
++ground : (resource:global.dat)Hotspots/colum_pice3 : 983 : 766;
+ ground : (resource:global.dat)Hotspots/colum_pice3 : 683 : 447;
+ ground : (resource:global.dat)Hotspots/colum_pice3 : 1014 : 708;
+-ground : (resource:global.dat)Hotspots/colum_pice3 : 1041 : 708;
+-ground : (resource:global.dat)Hotspots/colum_pice3 : 928 : 741;
++ground : (resource:global.dat)Hotspots/colum_pice3 : 1041 : 706;
++ground : (resource:global.dat)Hotspots/colum_pice3 : 933 : 746;
++ground : (resource:global.dat)Hotspots/colum_pice3 : 929 : 605;
+ ground : (resource:global.dat)Hotspots/colum_pice3 : 1128 : 698;
+Index: src/ActionHolder.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/ActionHolder.cc,v
+retrieving revision 1.16
+retrieving revision 1.17
+diff -u -r1.16 -r1.17
+--- src/ActionHolder.cc	2000/06/06 18:51:51	1.16
++++ src/ActionHolder.cc	2000/06/10 07:56:58	1.17
+@@ -1,4 +1,4 @@
+-//  $Id: ActionHolder.cc,v 1.16 2000/06/06 18:51:51 grumbel Exp $
++//  $Id: ActionHolder.cc,v 1.17 2000/06/10 07:56:58 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -81,18 +81,19 @@
+   
+   count = &(available_actions[name]);
+ 
+-  (*count)--;
+ 
+   if (*count > 0) 
+     {
++      (*count)--;
+       return get_uaction(name);
+     }
+   else
+     {
+-      if (unlimited_actions) 
+-	return get_uaction(name);
+-      else
+-	  return 0;
++      if (unlimited_actions) {
++      	return get_uaction(name);
++      } else {
++	return 0;
++      }
+     }
+ }
+ 
+Index: src/Client.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Client.cc,v
+retrieving revision 1.23
+retrieving revision 1.25
+diff -u -r1.23 -r1.25
+--- src/Client.cc	2000/05/26 17:54:11	1.23
++++ src/Client.cc	2000/06/10 07:56:58	1.25
+@@ -1,4 +1,4 @@
+-//  $Id: Client.cc,v 1.23 2000/05/26 17:54:11 grumbel Exp $
++//  $Id: Client.cc,v 1.25 2000/06/10 07:56:58 grumbel Exp $
+ // 
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -28,6 +28,7 @@
+ #include "algo.hh"
+ #include "Timer.hh"
+ #include "PingusResource.hh"
++#include "Display.hh"
+ #include "PingusLevelResult.hh"
+ #include "PingusSound.hh"
+ 
+@@ -40,6 +41,7 @@
+ 
+ Client::Client(Server* s)
+ {
++  player = 0;
+   server = s;
+   fast_forward = false;
+   pause = false;
+@@ -57,6 +59,19 @@
+ }
+ 
+ void
++Client::start(DemoPlayer* player)
++{
++  assert(player);
++  this->player = player;
++
++  std::string demo_level_file = find_file(pingus_datadir, "levels/" + player->get_levelname());
++
++  std::cout << "Demo_level_file: " << demo_level_file << std::endl;
++
++  play_level(demo_level_file);
++}
++
++void
+ Client::start(std::string filename, PingusGameMode m)
+ {
+   fast_forward = false;
+@@ -94,20 +109,17 @@
+   
+   timer.start();
+   if (verbose) std::cout << "Client: Generating UI elements..." << std::flush;
+-
+-  CL_MouseCursor::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
+-  CL_MouseCursor::show(true);
+-  /*
+-  if (!gui_is_init)
+-    {*/
+-      playfield    = new Playfield(plf, server->get_world());
+-      button_panel = new ButtonPanel(plf);
+-      pcounter     = new PingusCounter();
+-      small_map    = new SmallMap();
+-      time_display = new TimeDisplay();
+-      gui_is_init = true;
+-      //}
+ 
++  Display::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
++  Display::show_cursor();
++  
++  playfield    = new Playfield(plf, server->get_world());
++  button_panel = new ButtonPanel(plf);
++  pcounter     = new PingusCounter();
++  small_map    = new SmallMap();
++  time_display = new TimeDisplay();
++  gui_is_init = true;
++   
+   button_panel->set_server(server);
+   time_display->set_server(server);
+   button_panel->set_client(this);
+@@ -116,12 +128,9 @@
+   
+   event->playfield = playfield;
+ 
+-  if (play_demo)
++  /*  if (play_demo)
+     server->set_demo(demo_file);
+-  
+-  if (record_demo)
+-    server->set_record_file(demo_file);
+-
++  */
+   playfield->set_clip_rect(0, 0, 
+ 			   CL_Display::get_width(),
+ 			   CL_Display::get_height());
+@@ -144,7 +153,7 @@
+ void 
+ Client::deinit_display()
+ {
+-  CL_MouseCursor::hide();
++  Display::hide_cursor();
+ 
+   // Delete all alocated objects
+   delete pcounter;
+@@ -179,7 +188,10 @@
+     
+     plf->set_psm_filename(filename + ".psm");
+   }
+-  
++
++  if (!player)
++    server->record_demo();
++
+   server->start(plf);
+   event->register_event_handler();
+ 
+@@ -203,7 +215,10 @@
+     {
+       CL_System::keep_alive(); 
+     
++      // Let the server process a game loop
+       server->let_move();
++
++      send_next_event();
+     
+       // Let the window move its content
+       for(std::vector<GuiObj*>::size_type i=0; i < obj.size(); ++i) 
+@@ -226,6 +241,31 @@
+ 	}
+     }
+   event->unregister_event_handler();
++}
++
++void
++Client::send_next_event()
++{
++  if (!player) 
++    {
++      return;
++    }
++ else
++   {
++     while(!player->empty())
++       {
++	 const PingusEvent& event = player->peek_event();
++	 
++	 if (event.game_time > GameTime::get_time()) {
++	   break;
++	 } else if (event.game_time == GameTime::get_time()) {
++	   server->send_event(event.str);
++	   player->dequeue_event();
++	 } else {
++	   std::cout << "Client: Demo code currupt..." << std::endl;
++	 }
++       }
++   }
+ }
+ 
+ void
+Index: src/Client.hh
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Client.hh,v
+retrieving revision 1.11
+retrieving revision 1.12
+diff -u -r1.11 -r1.12
+--- src/Client.hh	2000/05/26 17:54:12	1.11
++++ src/Client.hh	2000/06/08 20:05:35	1.12
+@@ -1,4 +1,4 @@
+-//  $Id: Client.hh,v 1.11 2000/05/26 17:54:12 grumbel Exp $
++//  $Id: Client.hh,v 1.12 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -30,6 +30,7 @@
+ #include "TimeDisplay.hh"
+ #include "PinguInfo.hh"
+ #include "PingusCounter.hh"
++#include "DemoPlayer.hh"
+ #include "SmallMap.hh"
+ 
+ class ClientEvent;
+@@ -53,6 +54,7 @@
+   int  current_fps;
+   bool do_replay;
+   bool is_finished;
++  DemoPlayer* player;
+ 
+   std::vector<GuiObj* > obj;
+ 
+@@ -72,6 +74,10 @@
+ 
+   void start(std::string filename, PingusGameMode m = (PingusGameMode)INTERACTIVE_MODE);
+   void start(std::string plf_filename, std::string psm_filename);
++  void start(DemoPlayer*);
++
++  void send_next_event();
++
+   void play_level(std::string plf_filename, std::string psm_filename = "");
+ 
+   void init_display();
+Index: src/ClientEvent.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/ClientEvent.cc,v
+retrieving revision 1.9
+retrieving revision 1.10
+diff -u -r1.9 -r1.10
+--- src/ClientEvent.cc	2000/05/03 18:41:14	1.9
++++ src/ClientEvent.cc	2000/06/10 07:56:58	1.10
+@@ -1,4 +1,4 @@
+-//  $Id: ClientEvent.cc,v 1.9 2000/05/03 18:41:14 grumbel Exp $
++//  $Id: ClientEvent.cc,v 1.10 2000/06/10 07:56:58 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 2000 Ingo Ruhnke <grumbel@gmx.de>
+@@ -21,6 +21,7 @@
+ 
+ #include "globals.hh"
+ #include "OptionMenu.hh"
++#include "Display.hh"
+ #include "ClientEvent.hh"
+ 
+ ClientEvent::ClientEvent()
+@@ -128,9 +129,9 @@
+     {
+     case CL_KEY_O:
+       enabled = false;
+-      CL_MouseCursor::hide();
++      Display::hide_cursor();
+       option_menu.display();
+-      CL_MouseCursor::show(true);
++      Display::show_cursor();
+       enabled = true;
+       break;
+ 
+Index: src/DemoPlayer.cc
+===================================================================
+RCS file: DemoPlayer.cc
+diff -N DemoPlayer.cc
+--- /dev/null	Tue May  5 22:32:27 1998
++++ /tmp/cvsOguDOO	Sat Jun 10 09:59:55 2000
+@@ -0,0 +1,72 @@
++//  $Id: DemoPlayer.cc,v 1.1 2000/06/08 19:57:06 grumbel Exp $
++//
++//  Pingus - A free Lemmings clone
++//  Copyright (C) 2000 Ingo Ruhnke <grumbel@gmx.de>
++//
++//  This program is free software; you can redistribute it and/or
++//  modify it under the terms of the GNU General Public License
++//  as published by the Free Software Foundation; either version 2
++//  of the License, or (at your option) any later version.
++//
++//  This program is distributed in the hope that it will be useful,
++//  but WITHOUT ANY WARRANTY; without even the implied warranty of
++//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++//  GNU General Public License for more details.
++//
++//  You should have received a copy of the GNU General Public License
++//  along with this program; if not, write to the Free Software
++//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
++
++#include <fstream>
++#include "PingusError.hh"
++#include "DemoPlayer.hh"
++
++DemoPlayer::DemoPlayer()
++{
++}
++
++DemoPlayer::~DemoPlayer()
++{
++}
++
++std::string 
++DemoPlayer::get_levelname()
++{
++  return levelname;
++}
++
++void
++DemoPlayer::load(const std::string& filename)
++{
++  const int buffer_size = 256;
++  char buffer[buffer_size];
++  ifstream in(filename.c_str());
++
++  if (!in)
++    throw PingusError("DemoPlayer: Couldn't load " + filename);
++
++  in >> levelname; 
++  in.get(); // \n ueberlesen
++  std::cout << "DemoPlayer: LevelName=" << levelname << std::endl;
++
++  while(!(in.getline(buffer, buffer_size).eof()))
++    {
++      cout << "Readline: " << buffer << endl;
++      event_queue.push(PingusEvent(buffer));
++      std::cout << "Parsed: " << event_queue.back().game_time << ":" << event_queue.back().str << std::endl;
++    }
++}
++
++const PingusEvent& 
++DemoPlayer::peek_event()
++{
++  return event_queue.front();
++}
++
++void
++DemoPlayer::dequeue_event()
++{
++  event_queue.pop();
++}
++
++/* EOF */
+Index: src/DemoPlayer.hh
+===================================================================
+RCS file: DemoPlayer.hh
+diff -N DemoPlayer.hh
+--- /dev/null	Tue May  5 22:32:27 1998
++++ /tmp/cvsegyo3O	Sat Jun 10 09:59:55 2000
+@@ -0,0 +1,50 @@
++//  $Id: DemoPlayer.hh,v 1.1 2000/06/08 19:57:06 grumbel Exp $
++// 
++//  Pingus - A free Lemmings clone
++//  Copyright (C) 2000 Ingo Ruhnke <grumbel@gmx.de>
++//
++//  This program is free software; you can redistribute it and/or
++//  modify it under the terms of the GNU General Public License
++//  as published by the Free Software Foundation; either version 2
++//  of the License, or (at your option) any later version.
++//
++//  This program is distributed in the hope that it will be useful,
++//  but WITHOUT ANY WARRANTY; without even the implied warranty of
++//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++//  GNU General Public License for more details.
++// 
++//  You should have received a copy of the GNU General Public License
++//  along with this program; if not, write to the Free Software
++//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
++
++#ifndef DEMOPLAYER_HH
++#define DEMOPLAYER_HH
++
++#include <queue>
++#include <string>
++
++#include "Server.hh"
++
++class DemoPlayer
++{
++private:
++  std::queue<PingusEvent> event_queue;
++  std::string levelname;
++  bool is_playing;
++
++public:
++  DemoPlayer();
++  ~DemoPlayer();
++
++  void load(const std::string&);
++  std::string get_levelname();
++  const PingusEvent& peek_event();
++  void dequeue_event();
++  bool empty() { 
++    return event_queue.empty(); 
++  }
++};
++
++#endif
++
++/* EOF */
+Index: src/DemoRecorder.cc
+===================================================================
+RCS file: DemoRecorder.cc
+diff -N DemoRecorder.cc
+--- /dev/null	Tue May  5 22:32:27 1998
++++ /tmp/cvsOcwM6Q	Sat Jun 10 09:59:55 2000
+@@ -0,0 +1,73 @@
++//  $Id: DemoRecorder.cc,v 1.1 2000/06/08 19:57:06 grumbel Exp $
++//
++//  Pingus - A free Lemmings clone
++//  Copyright (C) 2000 Ingo Ruhnke <grumbel@gmx.de>
++//
++//  This program is free software; you can redistribute it and/or
++//  modify it under the terms of the GNU General Public License
++//  as published by the Free Software Foundation; either version 2
++//  of the License, or (at your option) any later version.
++//
++//  This program is distributed in the hope that it will be useful,
++//  but WITHOUT ANY WARRANTY; without even the implied warranty of
++//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++//  GNU General Public License for more details.
++//
++//  You should have received a copy of the GNU General Public License
++//  along with this program; if not, write to the Free Software
++//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
++
++#include <ctime>
++#include "System.hh"
++#include "PingusError.hh"
++#include "DemoRecorder.hh"
++
++DemoRecorder::DemoRecorder()
++{
++  is_recording = false;
++}
++
++DemoRecorder::~DemoRecorder()
++{
++}
++
++void
++DemoRecorder::set_levelname(const string& levelname)
++{
++  filename = System::get_statdir() + "demos/" + levelname + "-" + get_date() + ".plt";
++
++  std::cout << "Demo filename: " + filename << std::endl;
++  
++  is_recording = true;
++
++  out.open(filename.c_str());
++
++  out << levelname << std::endl;
++
++  if (!out)
++    throw PingusError("DemoRecorder: Couldn't open: " + filename);
++}
++
++void
++DemoRecorder::queue_event(const string& event)
++{
++  if (is_recording) {
++    out << event << std::endl;
++    std::cout << "Recorded: " << event << std::endl;
++  }
++}
++
++string 
++DemoRecorder::get_date()
++{
++  char buffer[32];
++  time_t curtime;
++  struct tm *loctime;
++  curtime = time (NULL);
++  loctime = localtime(&curtime);
++  strftime(buffer, 32, "%H_%M_%S-%m_%d_%Y", loctime);
++
++  return string(buffer);
++}
++
++/* EOF */
+Index: src/DemoRecorder.hh
+===================================================================
+RCS file: DemoRecorder.hh
+diff -N DemoRecorder.hh
+--- /dev/null	Tue May  5 22:32:27 1998
++++ /tmp/cvsqQVPLS	Sat Jun 10 09:59:55 2000
+@@ -0,0 +1,44 @@
++//  $Id: DemoRecorder.hh,v 1.1 2000/06/08 19:57:06 grumbel Exp $
++// 
++//  Pingus - A free Lemmings clone
++//  Copyright (C) 2000 Ingo Ruhnke <grumbel@gmx.de>
++//
++//  This program is free software; you can redistribute it and/or
++//  modify it under the terms of the GNU General Public License
++//  as published by the Free Software Foundation; either version 2
++//  of the License, or (at your option) any later version.
++//
++//  This program is distributed in the hope that it will be useful,
++//  but WITHOUT ANY WARRANTY; without even the implied warranty of
++//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++//  GNU General Public License for more details.
++// 
++//  You should have received a copy of the GNU General Public License
++//  along with this program; if not, write to the Free Software
++//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
++
++#ifndef DEMORECORDER_HH
++#define DEMORECORDER_HH
++
++#include <fstream>
++#include <string>
++
++class DemoRecorder
++{
++private:
++  std::ofstream out;
++  std::string   filename;
++  bool     is_recording;
++
++  std::string get_date();
++public:
++  DemoRecorder();
++  ~DemoRecorder();
++
++  void queue_event(const string&);
++  void set_levelname(const string&);
++};
++
++#endif
++
++/* EOF */
+Index: src/Display.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Display.cc,v
+retrieving revision 1.1
+retrieving revision 1.2
+diff -u -r1.1 -r1.2
+--- src/Display.cc	2000/02/12 20:53:42	1.1
++++ src/Display.cc	2000/06/10 07:56:58	1.2
+@@ -1,4 +1,4 @@
+-//  $Id: Display.cc,v 1.1 2000/02/12 20:53:42 grumbel Exp $
++//  $Id: Display.cc,v 1.2 2000/06/10 07:56:58 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 2000 Ingo Ruhnke <grumbel@gmx.de>
+@@ -21,6 +21,9 @@
+ 
+ #include "Display.hh"
+ 
++bool Display::displaying_cursor = false;
++bool Display::cursor_disabled = false;
++
+ void
+ Display::draw_rect(int x1, int y1, int x2, int y2, float r, float g, float b, float a)
+ {
+@@ -28,6 +31,45 @@
+   CL_Display::draw_line(x1, y2, x2, y2, r, g, b, a);
+   CL_Display::draw_line(x1, y1, x1, y2, r, g, b, a);
+   CL_Display::draw_line(x2, y1, x2, y2, r, g, b, a);
++}
++
++void
++Display::show_cursor(bool async)
++{
++  if (!cursor_disabled)
++    CL_MouseCursor::show(async);
++}
++
++void 
++Display::hide_cursor()
++{
++  if (!cursor_disabled)
++    CL_MouseCursor::hide();
++}
++ 
++void
++Display::set_cursor(CL_MouseCursorProvider *provider, int frame)
++{
++  if (!cursor_disabled)
++    CL_MouseCursor::set_cursor(provider, frame);
++}
++
++bool
++Display::cursor_shown()
++{
++  return displaying_cursor;
++}
++
++void 
++Display::disable_cursor()
++{
++  cursor_disabled = true;
++}
++
++void
++Display::enable_cursor()
++{
++  cursor_disabled = false;
+ }
+ 
+ /* EOF */
+Index: src/Display.hh
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Display.hh,v
+retrieving revision 1.1
+retrieving revision 1.2
+diff -u -r1.1 -r1.2
+--- src/Display.hh	2000/02/12 20:53:42	1.1
++++ src/Display.hh	2000/06/10 07:56:58	1.2
+@@ -1,4 +1,4 @@
+-//  $Id: Display.hh,v 1.1 2000/02/12 20:53:42 grumbel Exp $
++//  $Id: Display.hh,v 1.2 2000/06/10 07:56:58 grumbel Exp $
+ // 
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 2000 Ingo Ruhnke <grumbel@gmx.de>
+@@ -20,12 +20,23 @@
+ #ifndef DISPLAY_HH
+ #define DISPLAY_HH
+ 
++#include <ClanLib/core.h>
++
+ class Display
+ {
+ private:
++  static bool displaying_cursor;
++  static bool cursor_disabled;
+ 
+ public:
+   static void draw_rect(int x1, int y1, int x2, int y2, float r, float g, float b, float a);
++
++  static void show_cursor(bool show_async=true);
++  static void hide_cursor();
++  static void set_cursor(CL_MouseCursorProvider *provider, int frame=0);
++  static bool cursor_shown();
++  static void disable_cursor();
++  static void enable_cursor();
+ };
+ 
+ #endif
+Index: src/Intro.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Intro.cc,v
+retrieving revision 1.7
+retrieving revision 1.8
+diff -u -r1.7 -r1.8
+--- src/Intro.cc	2000/04/21 13:25:46	1.7
++++ src/Intro.cc	2000/06/10 07:56:58	1.8
+@@ -1,4 +1,4 @@
+-//  $Id: Intro.cc,v 1.7 2000/04/21 13:25:46 grumbel Exp $
++//  $Id: Intro.cc,v 1.8 2000/06/10 07:56:58 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -80,9 +80,7 @@
+     }
+ 
+   if (quit)
+-    {
+-      loading_screen.draw();
+-    }
++    loading_screen.draw();
+ 
+   if (verbose) std::cout << "Intro: Removing event handler" << std::endl;
+   CL_Input::chain_button_release.remove(event);
+Index: src/Loading.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Loading.cc,v
+retrieving revision 1.4
+retrieving revision 1.5
+diff -u -r1.4 -r1.5
+--- src/Loading.cc	2000/05/01 20:11:15	1.4
++++ src/Loading.cc	2000/06/10 07:56:58	1.5
+@@ -1,4 +1,4 @@
+-//  $Id: Loading.cc,v 1.4 2000/05/01 20:11:15 grumbel Exp $
++//  $Id: Loading.cc,v 1.5 2000/06/10 07:56:58 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 2000 Ingo Ruhnke <grumbel@gmx.de>
+@@ -18,6 +18,7 @@
+ //  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ 
+ #include "PingusResource.hh"
++#include "Display.hh"
+ #include "Loading.hh"
+ 
+ Loading loading_screen;
+@@ -42,25 +43,36 @@
+ void
+ Loading::draw()
+ {
++  bool cursor_shown = Display::cursor_shown();
++
+   if (!is_init)
+     init();
++  
++  if (cursor_shown)
++    Display::hide_cursor();
+ 
+-  CL_MouseCursor::hide();
+   CL_Display::clear_display();
+ 
+   sur->put_screen((CL_Display::get_width() - sur->get_width())/2,
+ 		  (CL_Display::get_height() - sur->get_height())/2);
+ 
+   CL_Display::flip_display();
++
++  if (cursor_shown)
++    Display::show_cursor();
+ }
+ 
+ void
+ Loading::draw_progress(std::string str, float progress)
+ {
++  bool cursor_shown = Display::cursor_shown();
++
+   if (!is_init)
+     init();
+ 
+-  CL_MouseCursor::hide();
++  if (cursor_shown)
++    Display::hide_cursor();
++
+   CL_Display::clear_display();
+ 
+   sur->put_screen((CL_Display::get_width() - sur->get_width())/2,
+@@ -79,6 +91,9 @@
+ 			1.0, 0.0, 0.0, 1.0);
+ 
+   CL_Display::flip_display();
++
++  if (cursor_shown)
++    Display::show_cursor();
+ }
+ 
+ /* EOF */
+Index: src/Makefile.am
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Makefile.am,v
+retrieving revision 1.20
+retrieving revision 1.21
+diff -u -r1.20 -r1.21
+--- src/Makefile.am	2000/05/27 23:11:21	1.20
++++ src/Makefile.am	2000/06/08 20:05:35	1.21
+@@ -1,4 +1,4 @@
+-#  $Id: Makefile.am,v 1.20 2000/05/27 23:11:21 grumbel Exp $
++#  $Id: Makefile.am,v 1.21 2000/06/08 20:05:35 grumbel Exp $
+ #
+ #  Pingus - A free Lemmings clone
+ #  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -77,7 +77,8 @@
+                  PinguMap.cc          PinguMap.hh          \
+                  PinguRandomMap.cc    PinguRandomMap.hh    \
+                  PingusCounter.cc     PingusCounter.hh     \
+-                 PingusDemo.cc        PingusDemo.hh        \
++                 DemoRecorder.cc      DemoRecorder.hh      \
++                 DemoPlayer.cc        DemoPlayer.hh        \
+                  PingusError.cc       PingusError.hh       \
+                  PingusGame.cc        PingusGame.hh        \
+                  PingusLevelDesc.cc   PingusLevelDesc.hh   \
+Index: src/OptionMenu.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/OptionMenu.cc,v
+retrieving revision 1.13
+retrieving revision 1.14
+diff -u -r1.13 -r1.14
+--- src/OptionMenu.cc	2000/05/28 19:54:08	1.13
++++ src/OptionMenu.cc	2000/06/10 07:56:58	1.14
+@@ -1,4 +1,4 @@
+-//  $Id: OptionMenu.cc,v 1.13 2000/05/28 19:54:08 grumbel Exp $
++//  $Id: OptionMenu.cc,v 1.14 2000/06/10 07:56:58 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -22,6 +22,7 @@
+ #include "globals.hh"
+ #include "PingusResource.hh"
+ #include "Loading.hh"
++#include "Display.hh"
+ #include "OptionMenu.hh"
+ 
+ // Define the global option menu
+@@ -295,11 +296,9 @@
+   CL_Input::chain_button_press.push_back(event);
+   CL_Input::chain_button_release.push_back(event);
+ 
++  Display::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
++  Display::show_cursor();
+ 
+-
+-  CL_MouseCursor::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
+-  CL_MouseCursor::show(true);
+-
+   draw();
+ 
+   while(!quit)
+@@ -336,7 +335,7 @@
+       CL_System::keep_alive();
+     }
+ 
+-  CL_MouseCursor::hide();
++  Display::hide_cursor();
+ 
+   CL_Input::chain_button_release.remove(event);
+   CL_Input::chain_button_press.remove(event);
+Index: src/Pingus.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Pingus.cc,v
+retrieving revision 1.28
+retrieving revision 1.30
+diff -u -r1.28 -r1.30
+--- src/Pingus.cc	2000/06/08 06:14:19	1.28
++++ src/Pingus.cc	2000/06/10 07:56:58	1.30
+@@ -1,4 +1,4 @@
+-//   $Id: Pingus.cc,v 1.28 2000/06/08 06:14:19 grumbel Exp $
++//   $Id: Pingus.cc,v 1.30 2000/06/10 07:56:58 grumbel Exp $
+ //    ___
+ //   |  _\ A free Lemmings clone
+ //   |   /_  _ _  ___  _   _  ___ 
+@@ -43,18 +43,16 @@
+ #include <ClanLib/core.h>
+ #include <ClanLib/magick.h>
+ 
+-#include "Client.hh"
+-#include "Server.hh"
+-#include "TrueServer.hh"
+ #include "Pingus.hh"
+ #include "algo.hh"
+ #include "globals.hh"
+ #include "PingusResource.hh"
+ #include "System.hh"
+ #include "PingusGame.hh"
+-#include "Playfield.hh"
++//#include "Playfield.hh"
+ #include "PingusError.hh"
+ #include "Loading.hh"
++#include "Display.hh"
+ #include "Config.hh"
+ 
+ #include "PingusSound.hh"
+@@ -192,6 +190,7 @@
+     {"quick-play",        no_argument,       0, 'q'},
+     {"enable-fullscreen", no_argument,       0, 'f'},
+     {"disable-fullscreen", no_argument,      0, 'F'},
++    {"disable-swcursor",  no_argument,       0, 145},
+ 
+     // FIXME: is the number stuff correct?
+     {"debug-actions",   no_argument,       0, 129},
+@@ -380,6 +379,10 @@
+       sscanf(optarg, "%d", &tile_size);
+       break;
+ 
++    case 145:
++      Display::disable_cursor();
++      break;
++
+     default:
+       
+       std::cout << "Unknow char: " << c << std::endl << std::endl;
+@@ -410,6 +413,7 @@
+ 	"   --disable-auto_scrolling Disable automatic scrolling\n"
+ 	"   --debug-tiles            Draw empty tiles\n"
+ 	"   --tile-size INT          Set the size of the map tiles (default: 32)\n"
++	"   --disable-swcursor       Disable software cursor, use hw cursor instead\n"
+ 	"   --no-cfg-file            Don't read ~/.pingus/config\n"
+ 	
+ 	"\nDemo playing and recording:\n"
+@@ -689,8 +693,14 @@
+ 
+   if (!levelfile.empty()) 
+     {
++      PingusGame game;
++      game.start_game(levelfile);
++    }
++
++  if (!demo_file.empty())
++    {
+       PingusGame game;
+-      game.start(levelfile);    
++      game.start_demo(demo_file);
+     }
+ 
+   try 
+Index: src/Pingus.hh
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Pingus.hh,v
+retrieving revision 1.8
+retrieving revision 1.9
+diff -u -r1.8 -r1.9
+--- src/Pingus.hh	2000/05/15 06:50:06	1.8
++++ src/Pingus.hh	2000/06/08 20:05:35	1.9
+@@ -1,4 +1,4 @@
+-//  $Id: Pingus.hh,v 1.8 2000/05/15 06:50:06 grumbel Exp $
++//  $Id: Pingus.hh,v 1.9 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -66,8 +66,6 @@
+   void init_clanlib(void);
+   // void intro(void);
+   void init_pingus(void);
+-
+-  void play_level(std::string filename, PingusGameMode);
+ } my_app; // notice this line. It creates the global instance.
+ 
+ #endif
+Index: src/PingusGame.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/PingusGame.cc,v
+retrieving revision 1.11
+retrieving revision 1.12
+diff -u -r1.11 -r1.12
+--- src/PingusGame.cc	2000/05/25 17:16:21	1.11
++++ src/PingusGame.cc	2000/06/08 20:05:35	1.12
+@@ -1,4 +1,4 @@
+-//  $Id: PingusGame.cc,v 1.11 2000/05/25 17:16:21 grumbel Exp $
++//  $Id: PingusGame.cc,v 1.12 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -26,6 +26,7 @@
+ #include "algo.hh"
+ #include "Timer.hh"
+ #include "TrueServer.hh"
++#include "DemoPlayer.hh"
+ #include "PingusGame.hh"
+ 
+ // A wrapper class around the client and the server, to allow a much
+@@ -93,7 +94,7 @@
+ 
+ // Start the given level
+ void
+-PingusGame::start(std::string plf_filename, std::string psm_filename)
++PingusGame::start_game(std::string plf_filename, std::string psm_filename)
+ {
+   if (verbose) std::cout << "PingusGame: start" << std::endl;
+ 
+@@ -115,7 +116,7 @@
+ 	if (server)
+ 	  delete server;
+ 
+-	server = new TrueServer;
++	server = new TrueServer();
+ 	client = new Client(server);
+     
+ 	if (psm_filename.empty()) 
+@@ -135,7 +136,36 @@
+       PingusMessageBox(" PingusError: " + err.message);
+     }
+ 
+-  if (verbose) std::cout << "PingusGame: start() done" << std::endl;
++  if (verbose) std::cout << "PingusGame: start_game() done" << std::endl;
++}
++
++void
++PingusGame::start_demo(std::string pdm_filename)
++{
++  DemoPlayer player;
++  
++  try 
++    {
++      if (client)
++	delete client;
++      
++      if (server)
++	delete server;
++
++      player.load(pdm_filename);
++     
++      server = new TrueServer();
++      client = new Client(server);
++      
++      client->start(&player);
++    }  
++
++  catch(PingusError err)
++    {
++      PingusMessageBox(" PingusError: " + err.message);
++    }
++
++  if (verbose) std::cout << "PingusGame: start_demo() done" << std::endl;
+ }
+ 
+ /* EOF */
+Index: src/PingusGame.hh
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/PingusGame.hh,v
+retrieving revision 1.4
+retrieving revision 1.5
+diff -u -r1.4 -r1.5
+--- src/PingusGame.hh	2000/02/16 03:06:24	1.4
++++ src/PingusGame.hh	2000/06/08 20:05:35	1.5
+@@ -1,4 +1,4 @@
+-//  $Id: PingusGame.hh,v 1.4 2000/02/16 03:06:24 grumbel Exp $
++//  $Id: PingusGame.hh,v 1.5 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -38,8 +38,9 @@
+ 
+   std::string read_lastlevel_file();
+   void   write_lastlevel_file(std::string levelfile);
+-  void   start(std::string plf_filename = "",
+-	       std::string psm_filename = "");
++  void   start_game(std::string plf_filename = "",
++		    std::string psm_filename = "");
++  void   start_demo(std::string pdm_filename = "");
+ };
+ 
+ #endif
+Index: src/PingusLevelResult.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/PingusLevelResult.cc,v
+retrieving revision 1.12
+retrieving revision 1.13
+diff -u -r1.12 -r1.13
+--- src/PingusLevelResult.cc	2000/05/01 20:11:15	1.12
++++ src/PingusLevelResult.cc	2000/06/10 07:56:58	1.13
+@@ -1,4 +1,4 @@
+-//  $Id: PingusLevelResult.cc,v 1.12 2000/05/01 20:11:15 grumbel Exp $
++//  $Id: PingusLevelResult.cc,v 1.13 2000/06/10 07:56:58 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -25,6 +25,7 @@
+ #include "globals.hh"
+ #include "PingusResource.hh"
+ #include "PingusLevelResult.hh"
++#include "Display.hh"
+ #include "PingusSound.hh"
+ 
+ PingusLevelResult::PingusLevelResult(World* w)
+@@ -45,7 +46,7 @@
+   PingusSound::play_mod("../data/music/pingus-2.it");
+ #endif
+ 
+-  CL_MouseCursor::hide();
++  Display::hide_cursor();
+ 
+   for(int y = 0; y < CL_Display::get_height(); y += background->get_height())
+     for(int x = 0; x < CL_Display::get_width(); x += background->get_width())
+Index: src/PingusMenu.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/PingusMenu.cc,v
+retrieving revision 1.19
+retrieving revision 1.21
+diff -u -r1.19 -r1.21
+--- src/PingusMenu.cc	2000/05/01 20:11:15	1.19
++++ src/PingusMenu.cc	2000/06/10 07:56:58	1.21
+@@ -1,4 +1,4 @@
+-//  $Id: PingusMenu.cc,v 1.19 2000/05/01 20:11:15 grumbel Exp $
++//  $Id: PingusMenu.cc,v 1.21 2000/06/10 07:56:58 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -29,6 +29,7 @@
+ #include "PingusError.hh"
+ #include "PingusMenu.hh"
+ #include "Loading.hh"
++#include "Display.hh"
+ #include "PingusSound.hh"
+ 
+ PingusMenu::PingusMenu()
+@@ -100,7 +101,7 @@
+   if (quick_play) 
+     {
+       PingusGame game;
+-      game.start ();
++      game.start_game();
+       quick_play = false;
+     }
+   
+@@ -114,8 +115,8 @@
+ 
+   event->enabled = true;
+ 
+-  CL_MouseCursor::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
+-  CL_MouseCursor::show(true);
++  Display::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
++  Display::show_cursor();
+ 
+   PingusSound::play_mod("../data/music/pingus-1.it");
+   
+@@ -127,7 +128,7 @@
+ 
+   event->enabled = false;
+ 
+-  CL_MouseCursor::hide();
++  Display::hide_cursor();
+ }
+ 
+ bool
+@@ -174,10 +175,10 @@
+ 	  if ((*i)->mouse_over())
+ 	    {
+ 	      enabled = false;
+-	      CL_MouseCursor::hide();
++	      Display::hide_cursor();
+ 	      (*i)->on_click();
+-	      CL_MouseCursor::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
+-	      CL_MouseCursor::show(true);
++	      Display::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
++	      Display::show_cursor();
+ 	      enabled = true;
+ 	    }
+ 	}
+Index: src/Server.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Server.cc,v
+retrieving revision 1.9
+retrieving revision 1.11
+diff -u -r1.9 -r1.11
+--- src/Server.cc	2000/06/06 18:51:51	1.9
++++ src/Server.cc	2000/06/10 07:56:58	1.11
+@@ -1,4 +1,4 @@
+-//  $Id: Server.cc,v 1.9 2000/06/06 18:51:51 grumbel Exp $
++//  $Id: Server.cc,v 1.11 2000/06/10 07:56:58 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -26,12 +26,29 @@
+ #include "Pingu.hh"
+ #include "PingusError.hh"
+ 
++PingusEvent::PingusEvent()
++{
++}
++
++PingusEvent::PingusEvent(std::string event_str)
++{
++  std::string game_time_str;
++  std::string::size_type split_pos = event_str.find(":");
++  
++  game_time_str = event_str.substr(0, split_pos);
++  str = event_str.substr(split_pos + 1);
++
++  if (sscanf(game_time_str.c_str(), "%d", &game_time) != 1) {
++    throw PingusError("PingusEvent: Unable to parse: " + event_str);
++  }
++}
++
+ Server::Server()
+ {
+   demo_mode = false;
+   get_next_event = true;
+   finished = false;
+-  demo_out.open("/tmp/demo.plt", (PingusDemoMode)record); 
++  //demo_out.open("/tmp/demo.plt", (PingusDemoMode)record); 
+ }
+ 
+ Server::~Server()
+@@ -47,7 +64,7 @@
+ void
+ Server::let_move()
+ {
+-  static PingusEvent event;
++  /*  static PingusEvent event;
+   
+   if (!demo_mode) {
+     return;
+@@ -57,11 +74,11 @@
+     {
+       // Getting next event from file
+       get_next_event = false;    
+-      event = demo_in->get_next_event();
++      //event = demo_in->get_next_event();
+     }
+   
+   // Check if the time for the event is right
+-  if (GameTime::get_time() == event.game_time) 
++  if (GameTime::get_time() == event.game_time)
+     {
+       process_event(event.str);
+       get_next_event = true;
+@@ -75,6 +92,7 @@
+ 		<< std::endl;
+       get_next_event = true;
+     }
++  */
+ }
+ 
+ // Some simple event management
+@@ -88,8 +106,8 @@
+   str += temp;
+   str += ":";
+   str += event;
+-  demo_out.set_next_event(str);
+ 
++  recorder.queue_event(str);
+   process_event(event);
+ }
+ 
+@@ -100,7 +118,7 @@
+   std::string token;
+   const char delimiters[] = ":";
+ 
+-  std::cout << "Event: " << event << std::endl;
++  std::cout << "Event: " << GameTime::get_time() << ":" << event << std::endl;
+ 
+   token = strtok(event_str, delimiters); // Get GameTime
+ 
+@@ -171,16 +189,17 @@
+ {
+   demo_mode = true;
+   demo_file = s;
+-  demo_in->open(demo_file, (PingusDemoMode)play);
++  //demo_in->open(demo_file, (PingusDemoMode)play);
+ 
+   std::cout << "Set_demo(): " << demo_file << " file opened" << std::endl;
+ }
+ 
+ void 
+-Server::set_record_file(std::string file)
++Server::record_demo()
+ {
+-  demo_out.open(file.c_str(), (PingusDemoMode)record);
+-};
++  cout << "Recording deme..." << endl;
++  recorder.set_levelname("test3");
++}
+ 
+ ActionHolder*
+ Server::get_action_holder()
+Index: src/Server.hh
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Server.hh,v
+retrieving revision 1.5
+retrieving revision 1.6
+diff -u -r1.5 -r1.6
+--- src/Server.hh	2000/04/24 13:15:41	1.5
++++ src/Server.hh	2000/06/08 20:05:35	1.6
+@@ -1,4 +1,4 @@
+-//  $Id: Server.hh,v 1.5 2000/04/24 13:15:41 grumbel Exp $
++//  $Id: Server.hh,v 1.6 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -24,8 +24,17 @@
+ #include <fstream>
+ #include "World.hh"
+ #include "ActionHolder.hh"
+-#include "PingusDemo.hh"
++#include "DemoRecorder.hh"
+ 
++class PingusEvent {
++public:
++  PingusEvent();
++  PingusEvent(std::string);
++
++  int          game_time;
++  std::string  str;
++};
++
+ class Server
+ {
+ protected:
+@@ -34,8 +43,7 @@
+   bool demo_mode;
+   std::string demo_file;
+   bool get_next_event;
+-  PingusDemo demo_out;
+-  PingusDemo* demo_in;
++  DemoRecorder recorder;
+   bool finished;
+ 
+ public:
+@@ -61,7 +69,7 @@
+   void process_event(std::string);
+   void send_event(std::string);
+   void set_demo(std::string);
+-  void set_record_file(std::string);
++  void record_demo();
+ };
+ 
+ #endif
+Index: src/SmallMap.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/SmallMap.cc,v
+retrieving revision 1.9
+retrieving revision 1.10
+diff -u -r1.9 -r1.10
+--- src/SmallMap.cc	2000/05/27 23:09:09	1.9
++++ src/SmallMap.cc	2000/06/08 20:05:35	1.10
+@@ -1,4 +1,4 @@
+-//  $Id: SmallMap.cc,v 1.9 2000/05/27 23:09:09 grumbel Exp $
++//  $Id: SmallMap.cc,v 1.10 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 2000 Ingo Ruhnke <grumbel@gmx.de>
+@@ -66,9 +66,9 @@
+   
+   cbuffer = static_cast<unsigned char*>(canvas->get_data());
+ 
+-  for(int y = 0; y < height; y++)
++  for(unsigned int y = 0; y < height; y++)
+     {
+-      for (int x = 0; x < width; x++)
++      for (unsigned int x = 0; x < width; x++)
+ 	{
+ 	  tx = x * colmap->get_width() / width;
+ 	  ty = y * colmap->get_height() / height;
+@@ -204,8 +204,8 @@
+ bool
+ SmallMap::mouse_over()
+ {
+-  if (CL_Mouse::get_x() > x_pos && CL_Mouse::get_x() < x_pos + width
+-      && CL_Mouse::get_y() > y_pos && CL_Mouse::get_y() < y_pos + height)
++  if (CL_Mouse::get_x() > x_pos && CL_Mouse::get_x() < x_pos + (int)width
++      && CL_Mouse::get_y() > y_pos && CL_Mouse::get_y() < y_pos + (int)height)
+     {
+       return true;
+     }
+Index: src/SmallMap.hh
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/SmallMap.hh,v
+retrieving revision 1.5
+retrieving revision 1.6
+diff -u -r1.5 -r1.6
+--- src/SmallMap.hh	2000/04/29 20:03:04	1.5
++++ src/SmallMap.hh	2000/06/08 20:05:35	1.6
+@@ -1,4 +1,4 @@
+-//  $Id: SmallMap.hh,v 1.5 2000/04/29 20:03:04 grumbel Exp $
++//  $Id: SmallMap.hh,v 1.6 2000/06/08 20:05:35 grumbel Exp $
+ // 
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 2000 Ingo Ruhnke <grumbel@gmx.de>
+@@ -37,11 +37,11 @@
+   CL_Surface* entrance_sur;
+   int x_pos;
+   int y_pos;
+-  int width;
+-  int height;
++  unsigned int width;
++  unsigned int height;
+   bool scroll_mode;
+-  int rwidth;
+-  int rheight;
++  unsigned int rwidth;
++  unsigned int rheight;
+ public:
+   SmallMap();
+   ~SmallMap();
+Index: src/SurfaceButton.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/SurfaceButton.cc,v
+retrieving revision 1.7
+retrieving revision 1.8
+diff -u -r1.7 -r1.8
+--- src/SurfaceButton.cc	2000/03/12 01:42:12	1.7
++++ src/SurfaceButton.cc	2000/06/08 20:05:35	1.8
+@@ -1,4 +1,4 @@
+-//  $Id: SurfaceButton.cc,v 1.7 2000/03/12 01:42:12 grumbel Exp $
++//  $Id: SurfaceButton.cc,v 1.8 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -100,7 +100,7 @@
+   loading_screen.draw();
+ 
+   PingusGame game;
+-  game.start();
++  game.start_game();
+ }
+ 
+ ///////////////////////////////////////////////
+Index: src/System.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/System.cc,v
+retrieving revision 1.8
+retrieving revision 1.9
+diff -u -r1.8 -r1.9
+--- src/System.cc	2000/04/25 17:54:40	1.8
++++ src/System.cc	2000/06/08 20:05:35	1.9
+@@ -1,4 +1,4 @@
+-//  $Id: System.cc,v 1.8 2000/04/25 17:54:40 grumbel Exp $
++//  $Id: System.cc,v 1.9 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -138,6 +138,10 @@
+ 	  std::cout << "Successfully created: " << directory << std::endl;
+ 	}
+     }
++  else
++    {
++      std::cout << "Found: " << directory << std::endl;
++    }
+ }
+ 
+ void
+@@ -150,6 +154,8 @@
+   create_dir(statdir + "levels/");
+   create_dir(statdir + "levels/dist");
+   create_dir(statdir + "stat/");
++  create_dir(statdir + "demos/");
++  create_dir(statdir + "demos/");
+   create_dir(statdir + "themes/");
+ 
+   // create_dir(vardir);
+Index: src/Theme.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/Theme.cc,v
+retrieving revision 1.10
+retrieving revision 1.11
+diff -u -r1.10 -r1.11
+--- src/Theme.cc	2000/05/28 16:47:24	1.10
++++ src/Theme.cc	2000/06/08 20:05:35	1.11
+@@ -1,4 +1,4 @@
+-//  $Id: Theme.cc,v 1.10 2000/05/28 16:47:24 grumbel Exp $
++//  $Id: Theme.cc,v 1.11 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -222,7 +222,7 @@
+       
+   try 
+     {
+-      game.start(find_file(pingus_datadir, "levels/" + plt.get_levels()[current_level]));
++      game.start_game(find_file(pingus_datadir, "levels/" + plt.get_levels()[current_level]));
+ 
+       if (current_level == accessible_levels)
+ 	++accessible_levels;
+Index: src/ThemeSelector.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/ThemeSelector.cc,v
+retrieving revision 1.14
+retrieving revision 1.15
+diff -u -r1.14 -r1.15
+--- src/ThemeSelector.cc	2000/05/26 18:02:52	1.14
++++ src/ThemeSelector.cc	2000/06/10 07:56:58	1.15
+@@ -1,4 +1,4 @@
+-//  $Id: ThemeSelector.cc,v 1.14 2000/05/26 18:02:52 grumbel Exp $
++//  $Id: ThemeSelector.cc,v 1.15 2000/06/10 07:56:58 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -204,8 +204,8 @@
+   PingusSound::play_mod("../data/music/pingus-1.it");
+ #endif
+ 
+-  CL_MouseCursor::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
+-  CL_MouseCursor::show(true);
++  Display::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
++  Display::show_cursor(true);
+ 
+   while(!key_pressed(CL_KEY_ESCAPE)) 
+     {
+@@ -213,7 +213,7 @@
+       draw();
+     }
+ 
+-  CL_MouseCursor::hide();
++  Display::hide_cursor();
+   event->enabled = false;
+ }
+ 
+Index: src/TrueServer.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/TrueServer.cc,v
+retrieving revision 1.10
+retrieving revision 1.11
+diff -u -r1.10 -r1.11
+--- src/TrueServer.cc	2000/06/06 18:51:51	1.10
++++ src/TrueServer.cc	2000/06/08 20:05:35	1.11
+@@ -1,4 +1,4 @@
+-//  $Id: TrueServer.cc,v 1.10 2000/06/06 18:51:51 grumbel Exp $
++//  $Id: TrueServer.cc,v 1.11 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -48,12 +48,13 @@
+ void
+ TrueServer::let_move(void)
+ {
+-  if (enough_time_passed()) {
+-    client_needs_redraw = true;
+-    GameTime::increase();
+-    Server::let_move();
+-    world->let_move();
+-  }
++  if (enough_time_passed()) 
++    {
++      client_needs_redraw = true;
++      GameTime::increase();
++      Server::let_move();
++      world->let_move();
++    }
+ }
+ 
+ void
+@@ -74,7 +75,6 @@
+     action_holder.set_actions(b->name, b->number_of);
+   }
+   std::cout << "done " << timer.stop() << std::endl;
+-  
+ 
+   fast_forward = false;
+   pause = false;
+@@ -86,6 +86,7 @@
+   // FIXME: this is complete trash, delete it and place it in world
+   // object or so...
+   world->set_action_holder(&action_holder);
++  Exit::set_action_holder(&action_holder);
+   Entrance::set_action_holder(&action_holder);
+   Pingu::set_action_holder(&action_holder);
+   Trap::set_action_holder(&action_holder);
+Index: src/TrueServer.hh
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/TrueServer.hh,v
+retrieving revision 1.3
+retrieving revision 1.4
+diff -u -r1.3 -r1.4
+--- src/TrueServer.hh	2000/02/16 03:06:28	1.3
++++ src/TrueServer.hh	2000/06/08 20:05:35	1.4
+@@ -1,4 +1,4 @@
+-//  $Id: TrueServer.hh,v 1.3 2000/02/16 03:06:28 grumbel Exp $
++//  $Id: TrueServer.hh,v 1.4 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -30,6 +30,7 @@
+   unsigned int  last_time;
+   int  local_game_speed;
+   bool client_needs_redraw;
++
+ public:
+   TrueServer(PLF* level_data);
+   TrueServer();
+Index: src/World.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/World.cc,v
+retrieving revision 1.20
+retrieving revision 1.21
+diff -u -r1.20 -r1.21
+--- src/World.cc	2000/06/06 18:51:51	1.20
++++ src/World.cc	2000/06/08 20:05:35	1.21
+@@ -1,4 +1,4 @@
+-//  $Id: World.cc,v 1.20 2000/06/06 18:51:51 grumbel Exp $
++//  $Id: World.cc,v 1.21 2000/06/08 20:05:35 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -59,7 +59,8 @@
+ World::World()
+ {
+   released_pingus = 0;
+-
++  map = 0;
++  background = 0;
+   exit_world = false;
+ }
+ 
+Index: src/actions/basher.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/actions/basher.cc,v
+retrieving revision 1.8
+retrieving revision 1.9
+diff -u -r1.8 -r1.9
+--- src/actions/basher.cc	2000/05/24 18:48:35	1.8
++++ src/actions/basher.cc	2000/06/10 07:56:59	1.9
+@@ -1,4 +1,4 @@
+-//  $Id: basher.cc,v 1.8 2000/05/24 18:48:35 grumbel Exp $
++//  $Id: basher.cc,v 1.9 2000/06/10 07:56:59 grumbel Exp $
+ //
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+ //
+@@ -123,7 +123,7 @@
+       //cout << rel_getpixel(i,0) << " " << flush;
+       if (rel_getpixel(i,0) & ColMap::WALL)
+ 	{
+-	  cout << "Found something to dig..." << endl;
++	  //cout << "Found something to dig..." << endl;
+ 	  return true;
+ 	}
+     }
+Index: src/editor/Editor.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/editor/Editor.cc,v
+retrieving revision 1.10
+retrieving revision 1.11
+diff -u -r1.10 -r1.11
+--- src/editor/Editor.cc	2000/04/24 13:15:42	1.10
++++ src/editor/Editor.cc	2000/06/10 07:57:00	1.11
+@@ -1,4 +1,4 @@
+-//  $Id: Editor.cc,v 1.10 2000/04/24 13:15:42 grumbel Exp $
++//  $Id: Editor.cc,v 1.11 2000/06/10 07:57:00 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -87,9 +87,9 @@
+ {
+   quit = false;
+ 
+-  CL_MouseCursor::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
++  Display::set_cursor(CL_MouseCursorProvider::load("Cursors/cursor", PingusResource::get("game.dat")));
+   
+-  CL_MouseCursor::show();
++  Display::show_cursor();
+ 
+   register_event_handler();
+ 
+@@ -102,7 +102,7 @@
+ 
+   unregister_event_handler();
+ 
+-  CL_MouseCursor::hide();
++  Display::hide_cursor();
+ }
+ 
+ 
+@@ -396,6 +396,9 @@
+ 
+ /***********************************************
+ $Log: Editor.cc,v $
++Revision 1.11  2000/06/10 07:57:00  grumbel
++Added wrapper around CL_MouseCursor and added an option to disable the software cursor, due to probable bugs in CL_MouseCursor
++
+ Revision 1.10  2000/04/24 13:15:42  grumbel
+ Added  Felix Natter's namespace clean ups
+ 
+Index: src/editor/EditorEvent.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/editor/EditorEvent.cc,v
+retrieving revision 1.13
+retrieving revision 1.15
+diff -u -r1.13 -r1.15
+--- src/editor/EditorEvent.cc	2000/05/01 17:42:24	1.13
++++ src/editor/EditorEvent.cc	2000/06/10 07:57:00	1.15
+@@ -1,4 +1,4 @@
+-//  $Id: EditorEvent.cc,v 1.13 2000/05/01 17:42:24 grumbel Exp $
++//  $Id: EditorEvent.cc,v 1.15 2000/06/10 07:57:00 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 2000 Ingo Ruhnke <grumbel@gmx.de>
+@@ -25,6 +25,7 @@
+ #include "../PingusError.hh"
+ #include "../System.hh"
+ #include "../Loading.hh"
++#include "../Display.hh"
+ #include "StringReader.hh"
+ #include "EditorEvent.hh"
+ 
+@@ -331,16 +332,14 @@
+ {
+   disable();
+ 
+-  CL_MouseCursor::hide();
+   loading_screen.draw();
+-  CL_MouseCursor::show();
+ 
+   try {
+     PingusGame game;
+     std::string levelfile = editor->save_tmp_level();
+     
+-    game.start(levelfile + ".plf",
+-	       levelfile + ".psm");
++    game.start_game(levelfile + ".plf",
++		    levelfile + ".psm");
+   }
+   
+   catch(PingusError err) {
+Index: src/editor/ObjectSelector.cc
+===================================================================
+RCS file: /usr/local/cvsroot/Games/Pingus/src/editor/ObjectSelector.cc,v
+retrieving revision 1.15
+retrieving revision 1.16
+diff -u -r1.15 -r1.16
+--- src/editor/ObjectSelector.cc	2000/05/28 19:30:10	1.15
++++ src/editor/ObjectSelector.cc	2000/06/10 07:57:00	1.16
+@@ -1,4 +1,4 @@
+-//  $Id: ObjectSelector.cc,v 1.15 2000/05/28 19:30:10 grumbel Exp $
++//  $Id: ObjectSelector.cc,v 1.16 2000/06/10 07:57:00 grumbel Exp $
+ //
+ //  Pingus - A free Lemmings clone
+ //  Copyright (C) 1999 Ingo Ruhnke <grumbel@gmx.de>
+@@ -24,6 +24,7 @@
+ #include "../globals.hh"
+ #include "StringReader.hh"
+ #include "../PingusResource.hh"
++#include "../Display.hh"
+ #include "../Loading.hh"
+ 
+ #include "ObjectSelector.hh"
+@@ -150,7 +151,7 @@
+ 	}
+     }
+   // Showing the mousecursor again, since loading_screen hides it
+-  CL_MouseCursor::show();
++  Display::show_cursor();
+ 
+   data_loaded = true;
+   str = select_surface(sur_list);
+@@ -347,6 +348,9 @@
+ /*
+ 
+ $Log: ObjectSelector.cc,v $
++Revision 1.16  2000/06/10 07:57:00  grumbel
++Added wrapper around CL_MouseCursor and added an option to disable the software cursor, due to probable bugs in CL_MouseCursor
++
+ Revision 1.15  2000/05/28 19:30:10  grumbel
+ Cleaned the status line a bit and added support to include solid groundpiecs from the editor
+ 

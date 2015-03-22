@@ -1,0 +1,9 @@
+Filenames are pingus-YEAR-MONTH-DAY, pingus-current always points to the
+most up to date binary. In general the static-binaries will require a CVS
+version of pingus from the same date or a date very close to it, you can
+update your CVS checkout via:
+
+ cd whereever/you/have/placed/your/pingus/checkout
+ cvs update -D YEAR/MONTH/DAY
+ 
+Where YEAR, MONTH and DAY have the same values as in the Pingus filename.
