@@ -1,0 +1,57 @@
+ 	Filename ▼ 	Summary + Labels ▼ 	Uploaded ▼ 	ReleaseDate ▼ 	Size ▼ 	DownloadCount ▼ 	...
+Download 	Pingus-0.7.6.2.dmg 	Pingus-0.7.6.2 for MacOSX 	Dec 2011 		15.3 MB 	3297
+Download 	Pingus-0.7.6-x86_64.dmg 	Pingus 0.7.6 for MacOSX (64bit build) 	Dec 2011 	Dec 2011 	15.1 MB 	2941
+Download 	Pingus-0.7.6.1.dmg 	Pingus-0.7.6.1.dmg   Deprecated 	Dec 2011 		15.2 MB 	210
+Download 	Pingus-0.7.6.dmg 	Pingus-0.7.6.dmg   Deprecated 	Dec 2011 		15.2 MB 	128
+Download 	pingus-0.7.6.tar.bz2 	Pingus-0.7.6 Source Code 	Dec 2011 		12.0 MB 	10641
+Download 	Pingus-0.7.6.exe 	Pingus-0.7.6 for Windows 	Dec 2011 		15.8 MB 	77640
+Download 	Pingus-0.7.5.exe 	Pingus-0.7.5.exe   Deprecated 	Oct 2011 		15.7 MB 	4241
+Download 	pingus-0.7.5.tar.bz2 	pingus-0.7.5.tar.bz2   Deprecated 	Oct 2011 		11.9 MB 	1263
+Download 	Pingus-0.7.5rc1.exe 	Pingus-0.7.5rc1.exe   Deprecated 	Oct 2011 		15.7 MB 	784
+Download 	pingus-0.7.5rc1.tar.bz2 	pingus-0.7.5rc1.tar.bz2   Deprecated 	Oct 2011 		11.9 MB 	130
+Download 	Pingus-0.7.5-win32-beta.exe 	Pingus-0.7.5-win32-beta.exe   Deprecated 	Oct 2011 		15.5 MB 	27
+Download 	pingus-0.7.4.tar.bz2 	pingus-0.7.4.tar.bz2   Deprecated 	Oct 2011 		11.8 MB 	535
+Download 	pingus-0.7.3.tar.bz2 	pingus-0.7.3.tar.bz2   Deprecated 	Sep 2011 		10.6 MB 	6
+Download 	pingus-0.7.2.tar.bz2 	pingus-0.7.2.tar.bz2   Deprecated 	Sep 2011 		10.5 MB 	7
+Download 	pingus-0.7.2.exe 	pingus-0.7.2.exe   Deprecated 	Sep 2011 		12.8 MB 	6
+Download 	pingus-0.7.1.tar.bz2.sig 	pingus-0.7.1.tar.bz2.sig   Deprecated 	Sep 2011 		65 bytes 	10
+Download 	pingus-0.7.1.tar.bz2 	pingus-0.7.1.tar.bz2   Deprecated 	Sep 2011 		10.2 MB 	5
+Download 	pingus-0.7.1.exe.old 	pingus-0.7.1.exe.old   Deprecated 	Sep 2011 		12.2 MB 	10
+Download 	pingus-0.7.1.exe 	pingus-0.7.1.exe   Deprecated 	Sep 2011 		12.2 MB 	4
+Download 	pingus-0.7.0.tar.bz2.sig 	pingus-0.7.0.tar.bz2.sig   Deprecated 	Sep 2011 		65 bytes 	10
+Download 	pingus-0.7.0.tar.bz2 	pingus-0.7.0.tar.bz2   Deprecated 	Sep 2011 		9.9 MB 	4
+Download 	pingus-0.7.0.exe.sig 	pingus-0.7.0.exe.sig   Deprecated 	Sep 2011 		65 bytes 	10
+Download 	pingus-0.7.0.exe 	pingus-0.7.0.exe   Deprecated 	Sep 2011 		12.1 MB 	4
+Download 	pingus-0.5.0pre3.tar.bz2 	pingus-0.5.0pre3.tar.bz2   Deprecated 	Sep 2011 		6.7 MB 	4
+Download 	pingus-0.5.0pre3-binary-i386.tar.bz2 	pingus-0.5.0pre3-binary-i386.tar.bz2   Deprecated 	Sep 2011 		7.8 MB 	4
+Download 	pingus-0.5.0pre1-binary-i386.tar.bz2 	pingus-0.5.0pre1-binary-i386.tar.bz2   Deprecated 	Sep 2011 		7.2 MB 	4
+Download 	pingus-0.4.0pre5-binary-i386.tar.gz 	pingus-0.4.0pre5-binary-i386.tar.gz   Deprecated 	Sep 2011 		5.6 MB 	4
+Download 	pingus-0.4.0pre4-binary-i386.tar.gz 	pingus-0.4.0pre4-binary-i386.tar.gz   Deprecated 	Sep 2011 		10.0 MB 	4
+Download 	pingus-0.4.0pre3.tar.gz 	pingus-0.4.0pre3.tar.gz   Deprecated 	Sep 2011 		4.4 MB 	4
+Download 	pingus-0.4.0pre2.tar.gz 	pingus-0.4.0pre2.tar.gz   Deprecated 	Sep 2011 		3.8 MB 	4
+Download 	pingus-0.4.0pre1.tar.gz 	pingus-0.4.0pre1.tar.gz   Deprecated 	Sep 2011 		3.6 MB 	4
+Download 	pingus-0.4.0-binary-i386.tar.gz 	pingus-0.4.0-binary-i386.tar.gz   Deprecated 	Sep 2011 		5.6 MB 	4
+Download 	pingus-0.3.1.tar.bz2 	pingus-0.3.1.tar.bz2   Deprecated 	Sep 2011 		2.9 MB 	4
+Download 	pingus-0.3.1pre3.tar.bz2 	pingus-0.3.1pre3.tar.bz2   Deprecated 	Sep 2011 		3.0 MB 	4
+Download 	pingus-0.3.1pre2.tar.bz2 	pingus-0.3.1pre2.tar.bz2   Deprecated 	Sep 2011 		3.0 MB 	4
+Download 	pingus-0.3.0.tar.bz2 	pingus-0.3.0.tar.bz2   Deprecated 	Sep 2011 		2.9 MB 	4
+Download 	pingus-0.3.0pre1.tar.bz2 	pingus-0.3.0pre1.tar.bz2   Deprecated 	Sep 2011 		2.9 MB 	4
+Download 	pingus-0.3.0a.tar.bz2 	pingus-0.3.0a.tar.bz2   Deprecated 	Sep 2011 		2.9 MB 	4
+Download 	pingus-0.3.1pre1.tar.gz 	pingus-0.3.1pre1.tar.gz   Deprecated 	Sep 2011 		4.8 MB 	4
+Download 	pingus-0.2.4.tar.gz 	pingus-0.2.4.tar.gz   Deprecated 	Sep 2011 		2.1 MB 	4
+Download 	pingus-0.2.4pre.tar.gz 	pingus-0.2.4pre.tar.gz   Deprecated 	Sep 2011 		2.2 MB 	4
+Download 	pingus-0.2.4pre4.tar.gz 	pingus-0.2.4pre4.tar.gz   Deprecated 	Sep 2011 		2.1 MB 	4
+Download 	pingus-0.2.4pre3.tar.gz 	pingus-0.2.4pre3.tar.gz   Deprecated 	Sep 2011 		2.1 MB 	4
+Download 	pingus-0.2.4pre2.tar.gz 	pingus-0.2.4pre2.tar.gz   Deprecated 	Sep 2011 		2.2 MB 	4
+Download 	pingus-0.2.3.tar.gz 	pingus-0.2.3.tar.gz   Deprecated 	Sep 2011 		1.6 MB 	4
+Download 	pingus-0.2.3pre.tar.gz 	pingus-0.2.3pre.tar.gz   Deprecated 	Sep 2011 		1.6 MB 	4
+Download 	pingus-0.2.3pre2.tar.gz 	pingus-0.2.3pre2.tar.gz   Deprecated 	Sep 2011 		1.6 MB 	4
+Download 	pingus-0.2.2.tar.gz 	pingus-0.2.2.tar.gz   Deprecated 	Sep 2011 		1.3 MB 	4
+Download 	pingus-0.2.1.tar.gz 	pingus-0.2.1.tar.gz   Deprecated 	Sep 2011 		1.3 MB 	4
+Download 	pingus-0.2.0.tar.gz 	pingus-0.2.0.tar.gz   Deprecated 	Sep 2011 		1.3 MB 	4
+Download 	pingus-0.2.0b.tar.gz 	pingus-0.2.0b.tar.gz   Deprecated 	Sep 2011 		1.3 MB 	4
+Download 	pingus-0.2.0a.tar.gz 	pingus-0.2.0a.tar.gz   Deprecated 	Sep 2011 		1.3 MB 	4
+Download 	pingus-0.1.2.tar.gz 	pingus-0.1.2.tar.gz   Deprecated 	Sep 2011 		1.1 MB 	4
+Download 	pingus-0.1.0.tar.gz 	pingus-0.1.0.tar.gz   Deprecated 	Sep 2011 		1.2 MB 	4
+Download 	pingus-0.0.11.tar.gz 	pingus-0.0.11.tar.gz   Deprecated 	Sep 2011 		302 KB 	4
+Download 	pingus-0.0.10.tar.gz 	pingus-0.0.10.tar.gz   Deprecated 	Sep 2011 		296 KB 	4
